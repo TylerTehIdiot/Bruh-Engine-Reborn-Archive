@@ -49,7 +49,7 @@ class Song
 	public var player3:String = 'gf'; //deprecated
 	public var gfVersion:String = 'gf';
 
-	private static function onLoadJson(songJson:SwagSong) // Convert old charts to newest format
+	private static function onLoadJson(songJson) // Convert old charts to newest format
 	{
 		if(songJson.gfVersion == null)
 		{
@@ -62,7 +62,8 @@ class Song
 			songJson.events = [];
 			for (secNum in 0...songJson.notes.length)
 			{
-				var sec:SwagSection = songJson.notes[secNum];
+				var notes = Reflect.getProperty(songJson, 'notes');
+				var sec:SwagSection = notes[secNum];
 
 				var i:Int = 0;
 				var notes:Array<Dynamic> = sec.sectionNotes;
@@ -95,7 +96,7 @@ class Song
 		
 		var formattedFolder:String = Paths.formatToSongPath(folder);
 		var formattedSong:String = Paths.formatToSongPath(jsonInput);
-		#if MODS_ALLOWED
+                #if MODS_ALLOWED
 		var moddyFile:String = Paths.modsJson(formattedFolder + '/' + formattedSong);
 		if(FileSystem.exists(moddyFile)) {
 			rawJson = File.getContent(moddyFile).trim();
@@ -133,7 +134,7 @@ class Song
 				daBpm = songData.bpm; */
 
 		var songJson:SwagSong = parseJSONshit(rawJson);
-		if(jsonInput != 'events') StageData.loadDirectory(songJson);
+		if(jsonInput != 'events') data.StageData.loadDirectory(songJson);
 		onLoadJson(songJson);
 		return songJson;
 	}

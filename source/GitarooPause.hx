@@ -52,7 +52,11 @@ class GitarooPause extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		if (controls.UI_LEFT_P || controls.UI_RIGHT_P)
+		if(FlxG.keys.justPressed.F11)
+                {
+                   FlxG.fullscreen = !FlxG.fullscreen;
+                }
+                if (controls.UI_LEFT_P || controls.UI_RIGHT_P)
 			changeThing();
 
 		if (controls.ACCEPT)

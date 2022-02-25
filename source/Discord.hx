@@ -14,20 +14,17 @@ class DiscordClient
 {
 	public function new()
 	{
-		trace("Discord Client starting...");
 		DiscordRpc.start({
-			clientID: "863222024192262205",
+			clientID: "885223855327698985",
 			onReady: onReady,
 			onError: onError,
 			onDisconnected: onDisconnected
 		});
-		trace("Discord Client started.");
 
 		while (true)
 		{
 			DiscordRpc.process();
 			sleep(2);
-			//trace("Discord Client Update");
 		}
 
 		DiscordRpc.shutdown();
@@ -41,10 +38,10 @@ class DiscordClient
 	static function onReady()
 	{
 		DiscordRpc.presence({
-			details: "In the Menus",
+			details: "The Menu",
 			state: null,
-			largeImageKey: 'icon',
-			largeImageText: "Psych Engine"
+			largeImageKey: 'discordlogo',
+			largeImageText: "Grafex Engine"
 		});
 	}
 
@@ -67,7 +64,7 @@ class DiscordClient
 		trace("Discord Client initialized");
 	}
 
-	public static function changePresence(details:String, state:Null<String>, ?smallImageKey : String, ?hasStartTimestamp : Bool, ?endTimestamp: Float)
+	public static function changePresence(details:String, state:Null<String>, ?smallImageKey:String, ?smallImageText:String, ?hasStartTimestamp : Bool, ?endTimestamp: Float)
 	{
 		var startTimestamp:Float = if(hasStartTimestamp) Date.now().getTime() else 0;
 
@@ -79,21 +76,22 @@ class DiscordClient
 		DiscordRpc.presence({
 			details: details,
 			state: state,
-			largeImageKey: 'icon',
-			largeImageText: "Engine Version: " + MainMenuState.psychEngineVersion,
+			largeImageKey: 'discordlogo',
+			largeImageText: "Grafex v " + data.EngineData.grafexEngineVersion,
 			smallImageKey : smallImageKey,
+                        smallImageText : smallImageText,
 			// Obtained times are in milliseconds so they are divided so Discord can use it
 			startTimestamp : Std.int(startTimestamp / 1000),
-            endTimestamp : Std.int(endTimestamp / 1000)
+                        endTimestamp : Std.int(endTimestamp / 1000)
 		});
 
-		//trace('Discord RPC Updated. Arguments: $details, $state, $smallImageKey, $hasStartTimestamp, $endTimestamp');
+		//trace('Discord RPC Updated. Arguments: $details, $state, $smallImageKey, ,$smallImageText ,$hasStartTimestamp, $endTimestamp');
 	}
 
 	#if LUA_ALLOWED
 	public static function addLuaCallbacks(lua:State) {
-		Lua_helper.add_callback(lua, "changePresence", function(details:String, state:Null<String>, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float) {
-			changePresence(details, state, smallImageKey, hasStartTimestamp, endTimestamp);
+		Lua_helper.add_callback(lua, "changePresence", function(details:String, state:Null<String>, ?smallImageKey:String, ?smallImageText:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float) {
+			changePresence(details, state, smallImageKey, smallImageText, hasStartTimestamp, endTimestamp);
 		});
 	}
 	#end

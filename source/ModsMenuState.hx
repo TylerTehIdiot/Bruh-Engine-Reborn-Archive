@@ -26,10 +26,7 @@ import flash.geom.Rectangle;
 import flixel.ui.FlxButton;
 import flixel.FlxBasic;
 import sys.io.File;
-/*import haxe.zip.Reader;
-import haxe.zip.Entry;
-import haxe.zip.Uncompress;
-import haxe.zip.Writer;*/
+import data.WeekData;
 
 using StringTools;
 
@@ -41,7 +38,9 @@ class ModsMenuState extends MusicBeatState
 	var intendedColor:Int;
 	var colorTween:FlxTween;
 	
-	var noModsTxt:FlxText;
+	var noModsTxt:Alphabet;
+	var noModsTxt2:Alphabet;
+	var noModsTxt3:Alphabet;
 	var selector:AttachedSprite;
 	var descriptionTxt:FlxText;
 	var needaReset = false;
@@ -66,8 +65,7 @@ class ModsMenuState extends MusicBeatState
 
 	override function create()
 	{
-		Paths.clearStoredMemory();
-		Paths.clearUnusedMemory();
+		Paths.destroyLoadedImages();
 		WeekData.setDirectoryFromWeek();
 
 		#if desktop
@@ -78,16 +76,30 @@ class ModsMenuState extends MusicBeatState
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.globalAntialiasing;
 		add(bg);
-		bg.screenCenter();
-
-		noModsTxt = new FlxText(0, 0, FlxG.width, "NO MODS INSTALLED\nPRESS BACK TO EXIT AND INSTALL A MOD", 48);
-		if(FlxG.random.bool(0.1)) noModsTxt.text += '\nBITCH.'; //meanie
-		noModsTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		
+		noModsTxt = new Alphabet(0, 300, "NO MODS INSTALLED", true, false, 0.05, 0.66);
+		noModsTxt.screenCenter(X);
 		noModsTxt.scrollFactor.set();
-		noModsTxt.borderSize = 2;
 		add(noModsTxt);
 		noModsTxt.screenCenter();
 		visibleWhenNoMods.push(noModsTxt);
+
+		noModsTxt2 = new Alphabet(0, 360, "PRESS BACK TO EXIT AND INSTALL A MOD", true, false, 0.05, 0.66);
+		noModsTxt2.screenCenter(X);
+		noModsTxt2.scrollFactor.set();
+		add(noModsTxt2);
+		visibleWhenNoMods.push(noModsTxt2);
+		if(FlxG.random.bool(0.1))
+		{
+			noModsTxt3 = new Alphabet(0, 420, "BITCH.", true, false, 0.05, 0.66);
+			noModsTxt3.screenCenter(X);
+			noModsTxt3.scrollFactor.set();
+			add(noModsTxt3);
+			visibleWhenNoMods.push(noModsTxt3);
+			noModsTxt.y -= 25;
+			noModsTxt2.y -= 25;
+			noModsTxt3.y -= 25;
+		}
 
 		var path:String = 'modsList.txt';
 		if(FileSystem.exists(path))
@@ -351,7 +363,7 @@ class ModsMenuState extends MusicBeatState
 
 	/*function getIntArray(max:Int):Array<Int>{
 		var arr:Array<Int> = [];
-		for (i in 0...max) {
+		for (i in 0...max){
 			arr.push(i);
 		}
 		return arr;
@@ -433,6 +445,9 @@ class ModsMenuState extends MusicBeatState
 		{
 			noModsSine += 180 * elapsed;
 			noModsTxt.alpha = 1 - Math.sin((Math.PI * noModsSine) / 180);
+			noModsTxt2.alpha = 1 - Math.sin((Math.PI * noModsSine) / 180);
+			if(noModsTxt3 != null)
+				noModsTxt3.alpha = 1 - Math.sin((Math.PI * noModsSine) / 180);
 		}
 
 		if(canExit && controls.BACK)

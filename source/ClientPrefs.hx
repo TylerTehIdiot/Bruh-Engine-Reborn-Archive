@@ -7,9 +7,21 @@ import flixel.graphics.FlxGraphic;
 import Controls;
 
 class ClientPrefs {
-	public static var downScroll:Bool = false;
+	//WHAT ADDED
+    public static var hitsound:Bool = false;
+    public static var cameramove:Bool = false;
+    public static var hsvol:Float = 1;
+    public static var hliconbop:String = 'Grafex';
+    public static var underdelayalpha:Float = 0.1;
+    public static var underdelayonoff:Bool = true;
+    public static var noteSkin:String = 'Default';
+    public static var showjud:Bool = true;
+
+        //WHAT WAS
+    public static var downScroll:Bool = false;
 	public static var middleScroll:Bool = false;
 	public static var showFPS:Bool = true;
+    public static var showMEM:Bool = true;
 	public static var flashing:Bool = true;
 	public static var globalAntialiasing:Bool = true;
 	public static var noteSplashes:Bool = true;
@@ -29,18 +41,8 @@ class ClientPrefs {
 	public static var healthBarAlpha:Float = 1;
 	public static var controllerMode:Bool = false;
 	public static var gameplaySettings:Map<String, Dynamic> = [
-		'scrollspeed' => 1.0,
-		'scrolltype' => 'multiplicative', 
-		// anyone reading this, amod is multiplicative speed mod, cmod is constant speed mod, and xmod is bpm based speed mod.
-		// an amod example would be chartSpeed * multiplier
-		// cmod would just be constantSpeed = chartSpeed
-		// and xmod basically works by basing the speed on the bpm.
-		// iirc (beatsPerSecond * (conductorToNoteDifference / 1000)) * noteSize (110 or something like that depending on it, prolly just use note.height)
-		// bps is calculated by bpm / 60
-		// oh yeah and you'd have to actually convert the difference to seconds which I already do, because this is based on beats and stuff. but it should work
-		// just fine. but I wont implement it because I don't know how you handle sustains and other stuff like that.
-		// oh yeah when you calculate the bps divide it by the songSpeed or rate because it wont scroll correctly when speeds exist.
-		'songspeed' => 1.0,
+		'scrollspeed' => 0.0,
+		'songspeed' => 0.0,
 		'healthgain' => 1.0,
 		'healthloss' => 1.0,
 		'instakill' => false,
@@ -50,6 +52,8 @@ class ClientPrefs {
 	];
 
 	public static var comboOffset:Array<Int> = [0, 0, 0, 0];
+	public static var keSustains:Bool = false; //i was bored, okay?
+	
 	public static var ratingOffset:Int = 0;
 	public static var sickWindow:Int = 45;
 	public static var goodWindow:Int = 90;
@@ -89,16 +93,21 @@ class ClientPrefs {
 	}
 
 	public static function saveSettings() {
-		FlxG.save.data.downScroll = downScroll;
+		FlxG.save.data.showjud = showjud;
+        FlxG.save.data.hitsound = hitsound;
+        FlxG.save.data.cameramove = cameramove;
+        FlxG.save.data.hliconbop = hliconbop;
+        FlxG.save.data.noteSkin = noteSkin;
+        FlxG.save.data.downScroll = downScroll;
 		FlxG.save.data.middleScroll = middleScroll;
 		FlxG.save.data.showFPS = showFPS;
+        FlxG.save.data.showMEM = showMEM;
 		FlxG.save.data.flashing = flashing;
 		FlxG.save.data.globalAntialiasing = globalAntialiasing;
 		FlxG.save.data.noteSplashes = noteSplashes;
 		FlxG.save.data.lowQuality = lowQuality;
 		FlxG.save.data.framerate = framerate;
-		//FlxG.save.data.cursing = cursing;
-		//FlxG.save.data.violence = violence;
+
 		FlxG.save.data.camZooms = camZooms;
 		FlxG.save.data.noteOffset = noteOffset;
 		FlxG.save.data.hideHud = hideHud;
@@ -108,10 +117,12 @@ class ClientPrefs {
 		FlxG.save.data.timeBarType = timeBarType;
 		FlxG.save.data.scoreZoom = scoreZoom;
 		FlxG.save.data.noReset = noReset;
+        FlxG.save.data.underdelayalpha = underdelayalpha;
+        FlxG.save.data.underdelayonoff = underdelayonoff;
+
 		FlxG.save.data.healthBarAlpha = healthBarAlpha;
+        FlxG.save.data.hsvol = hsvol;
 		FlxG.save.data.comboOffset = comboOffset;
-		FlxG.save.data.achievementsMap = Achievements.achievementsMap;
-		FlxG.save.data.henchmenDeath = Achievements.henchmenDeath;
 
 		FlxG.save.data.ratingOffset = ratingOffset;
 		FlxG.save.data.sickWindow = sickWindow;
@@ -124,15 +135,40 @@ class ClientPrefs {
 		FlxG.save.flush();
 
 		var save:FlxSave = new FlxSave();
-		save.bind('controls_v2', 'ninjamuffin99'); //Placing this in a separate save so that it can be manually deleted without removing your Score and stuff
+		save.bind('controls_v2', 'xale'); //Placing this in a separate save so that it can be manually deleted without removing your Score and stuff
 		save.data.customControls = keyBinds;
 		save.flush();
 		FlxG.log.add("Settings saved!");
 	}
 
 	public static function loadPrefs() {
-		if(FlxG.save.data.downScroll != null) {
-			downScroll = FlxG.save.data.downScroll;
+		if(FlxG.save.data.noteSkin != null) {
+			noteSkin = FlxG.save.data.noteSkin;
+		}
+                if(FlxG.save.data.showjud == null) {
+			showjud = true;
+		}
+               if(FlxG.save.data.showjud != null) {
+			showjud = FlxG.save.data.showjud;
+		}
+                if(FlxG.save.data.cameramove == null) {
+			cameramove = false;
+		}
+               if(FlxG.save.data.cameramove != null) {
+			cameramove = FlxG.save.data.cameramove;
+		}
+
+			if(FlxG.save.data.hitsound == null) {
+				hitsound = false;
+		}
+
+            if(FlxG.save.data.hitsound != null) {
+				hitsound = FlxG.save.data.hitsound;
+		}
+
+
+            if(FlxG.save.data.downScroll != null) {
+				downScroll = FlxG.save.data.downScroll;
 		}
 		if(FlxG.save.data.middleScroll != null) {
 			middleScroll = FlxG.save.data.middleScroll;
@@ -141,6 +177,12 @@ class ClientPrefs {
 			showFPS = FlxG.save.data.showFPS;
 			if(Main.fpsVar != null) {
 				Main.fpsVar.visible = showFPS;
+			}
+		}
+               if(FlxG.save.data.showMEM != null) {
+			showMEM = FlxG.save.data.showMEM;
+			if(Main.memoryCounter != null) {
+				Main.memoryCounter.visible = showMEM;
 			}
 		}
 		if(FlxG.save.data.flashing != null) {
@@ -165,12 +207,6 @@ class ClientPrefs {
 				FlxG.updateFramerate = framerate;
 			}
 		}
-		/*if(FlxG.save.data.cursing != null) {
-			cursing = FlxG.save.data.cursing;
-		}
-		if(FlxG.save.data.violence != null) {
-			violence = FlxG.save.data.violence;
-		}*/
 		if(FlxG.save.data.camZooms != null) {
 			camZooms = FlxG.save.data.camZooms;
 		}
@@ -183,10 +219,17 @@ class ClientPrefs {
 		if(FlxG.save.data.arrowHSV != null) {
 			arrowHSV = FlxG.save.data.arrowHSV;
 		}
+		if(FlxG.save.data.imagesPersist != null) {
+			imagesPersist = FlxG.save.data.imagesPersist;
+			FlxGraphic.defaultPersist = ClientPrefs.imagesPersist;
+		}
 		if(FlxG.save.data.ghostTapping != null) {
 			ghostTapping = FlxG.save.data.ghostTapping;
 		}
-		if(FlxG.save.data.timeBarType != null) {
+		if(FlxG.save.data.hliconbop != null) {
+			hliconbop = FlxG.save.data.hliconbop;
+		}
+                if(FlxG.save.data.timeBarType != null) {
 			timeBarType = FlxG.save.data.timeBarType;
 		}
 		if(FlxG.save.data.scoreZoom != null) {
@@ -195,8 +238,17 @@ class ClientPrefs {
 		if(FlxG.save.data.noReset != null) {
 			noReset = FlxG.save.data.noReset;
 		}
-		if(FlxG.save.data.healthBarAlpha != null) {
+		if(FlxG.save.data.underdelayalpha != null) {
+			underdelayalpha = FlxG.save.data.underdelayalpha;
+		}
+                if(FlxG.save.data.underdelayonoff != null) {
+			underdelayonoff = FlxG.save.data.underdelayonoff;
+		}
+                if(FlxG.save.data.healthBarAlpha != null) {
 			healthBarAlpha = FlxG.save.data.healthBarAlpha;
+		}
+                if(FlxG.save.data.hsvol != null) {
+			hsvol = FlxG.save.data.hsvol;
 		}
 		if(FlxG.save.data.comboOffset != null) {
 			comboOffset = FlxG.save.data.comboOffset;
@@ -240,7 +292,7 @@ class ClientPrefs {
 		}
 
 		var save:FlxSave = new FlxSave();
-		save.bind('controls_v2', 'ninjamuffin99');
+		save.bind('controls_v2', 'xale');
 		if(save != null && save.data.customControls != null) {
 			var loadedControls:Map<String, Array<FlxKey>> = save.data.customControls;
 			for (control => keys in loadedControls) {
@@ -264,6 +316,7 @@ class ClientPrefs {
 		FlxG.sound.volumeDownKeys = TitleState.volumeDownKeys;
 		FlxG.sound.volumeUpKeys = TitleState.volumeUpKeys;
 	}
+
 	public static function copyKey(arrayToCopy:Array<FlxKey>):Array<FlxKey> {
 		var copiedArray:Array<FlxKey> = arrayToCopy.copy();
 		var i:Int = 0;

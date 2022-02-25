@@ -82,6 +82,7 @@ class CustomFadeTransition extends MusicBeatSubstate {
 
 	override function destroy() {
 		if(leTween != null) {
+
 			finishCallback();
 			leTween.cancel();
 		}

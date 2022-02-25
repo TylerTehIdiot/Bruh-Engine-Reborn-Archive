@@ -21,7 +21,6 @@ class MusicBeatState extends FlxUIState
 
 	private var curStep:Int = 0;
 	private var curBeat:Int = 0;
-
 	private var controls(get, never):Controls;
 
 	inline function get_controls():Controls
@@ -31,8 +30,9 @@ class MusicBeatState extends FlxUIState
 		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		super.create();
 
+		// Custom made Trans out
 		if(!skip) {
-			openSubState(new CustomFadeTransition(0.7, true));
+			openSubState(new CustomFadeTransition(1, true));
 		}
 		FlxTransitionableState.skipNextTransOut = false;
 	}
@@ -61,8 +61,6 @@ class MusicBeatState extends FlxUIState
 
 		if (oldStep != curStep && curStep > 0)
 			stepHit();
-
-		if(FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
 
 		super.update(elapsed);
 	}
@@ -93,7 +91,7 @@ class MusicBeatState extends FlxUIState
 		var curState:Dynamic = FlxG.state;
 		var leState:MusicBeatState = curState;
 		if(!FlxTransitionableState.skipNextTransIn) {
-			leState.openSubState(new CustomFadeTransition(0.6, false));
+			leState.openSubState(new CustomFadeTransition(0.7, false));
 			if(nextState == FlxG.state) {
 				CustomFadeTransition.finishCallback = function() {
 					FlxG.resetState();

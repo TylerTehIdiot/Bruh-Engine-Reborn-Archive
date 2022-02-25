@@ -16,9 +16,9 @@ typedef EventNote = {
 	value1:String,
 	value2:String
 }
-
 class Note extends FlxSprite
 {
+    public var deftype:Bool;       
 	public var strumTime:Float = 0;
 
 	public var mustPress:Bool = false;
@@ -77,6 +77,16 @@ class Note extends FlxSprite
 	public var hitCausesMiss:Bool = false;
 	public var distance:Float = 2000;//plan on doing scroll directions soon -bb
 
+        public static var holdArrowScales:Map<String, Float> = [
+		'Future'	=> 0.565,
+		'Chip'		=> 0.565
+	];
+
+	public static var downScrollHoldEndOffset:Map<String, Float> = [
+		'Future'	=> -12.2,
+		'Chip'		=> 13
+	];
+
 	private function set_texture(value:String):String {
 		if(texture != value) {
 			reloadNote('', value);
@@ -95,7 +105,7 @@ class Note extends FlxSprite
 			switch(value) {
 				case 'Hurt Note':
 					ignoreNote = mustPress;
-					reloadNote('HURT');
+					reloadNote('HURT','','', true);
 					noteSplashTexture = 'HURTnoteSplashes';
 					colorSwap.hue = 0;
 					colorSwap.saturation = 0;
@@ -118,6 +128,9 @@ class Note extends FlxSprite
 		noteSplashBrt = colorSwap.brightness;
 		return value;
 	}
+        var lastNoteOffsetXForPixelAutoAdjusting:Float = 0;
+	var lastNoteScaleToo:Float = 1;
+	public var originalHeightForCalcs:Float = 6;
 
 	public function new(strumTime:Float, noteData:Int, ?prevNote:Note, ?sustainNote:Bool = false, ?inEditor:Bool = false)
 	{
@@ -213,7 +226,22 @@ class Note extends FlxSprite
 
 				if(PlayState.isPixelStage) {
 					prevNote.scale.y *= 1.19;
-					prevNote.scale.y *= (6 / height); //Auto adjust note size
+                                        prevNote.scale.y *= (6 / height); //Auto adjust note size
+				}
+                                else {
+					var holdScale:Float = 1;
+					if(holdArrowScales.exists(ClientPrefs.noteSkin))
+					{
+                                                if(prevNote.deftype)
+                                                {
+						holdScale = 1;
+                                                }
+                                                else
+                                                {
+                                                holdScale = holdArrowScales.get(ClientPrefs.noteSkin);
+                                                }
+					}
+					prevNote.scale.y *= holdScale;
 				}
 				prevNote.updateHitbox();
 				// prevNote.setGraphicSize();
@@ -229,15 +257,21 @@ class Note extends FlxSprite
 		x += offsetX;
 	}
 
-	var lastNoteOffsetXForPixelAutoAdjusting:Float = 0;
-	var lastNoteScaleToo:Float = 1;
-	public var originalHeightForCalcs:Float = 6;
-	function reloadNote(?prefix:String = '', ?texture:String = '', ?suffix:String = '') {
+	function reloadNote(?prefix:String = '', ?texture:String = '', ?suffix:String = '', ?deftype:Bool) {
 		if(prefix == null) prefix = '';
 		if(texture == null) texture = '';
 		if(suffix == null) suffix = '';
+                if(deftype == null) deftype = false;
 		
-		var skin:String = texture;
+		var coolswag:String = '';
+		if(ClientPrefs.noteSkin != 'Default')
+		{
+	        if(deftype)
+                coolswag = '';
+            else
+                coolswag = '-' + ClientPrefs.noteSkin.toLowerCase().replace(' ', '-');
+		}
+                var skin:String = texture;
 		if(texture.length < 1) {
 			skin = PlayState.SONG.arrowSkin;
 			if(skin == null || skin.length < 1) {
@@ -257,40 +291,46 @@ class Note extends FlxSprite
 		var blahblah:String = arraySkin.join('/');
 		if(PlayState.isPixelStage) {
 			if(isSustainNote) {
-				loadGraphic(Paths.image('pixelUI/' + blahblah + 'ENDS'));
+				loadGraphic(Paths.image('pixelUI/' + blahblah + 'ENDS' + coolswag));
 				width = width / 4;
 				height = height / 2;
-				originalHeightForCalcs = height;
-				loadGraphic(Paths.image('pixelUI/' + blahblah + 'ENDS'), true, Math.floor(width), Math.floor(height));
+                originalHeightForCalcs = height;
+				loadGraphic(Paths.image('pixelUI/' + blahblah + 'ENDS' + coolswag), true, Math.floor(width), Math.floor(height));
 			} else {
-				loadGraphic(Paths.image('pixelUI/' + blahblah));
+				loadGraphic(Paths.image('pixelUI/' + blahblah + coolswag));
 				width = width / 4;
 				height = height / 5;
-				loadGraphic(Paths.image('pixelUI/' + blahblah), true, Math.floor(width), Math.floor(height));
+				loadGraphic(Paths.image('pixelUI/' + blahblah + coolswag), true, Math.floor(width), Math.floor(height));
 			}
 			setGraphicSize(Std.int(width * PlayState.daPixelZoom));
 			loadPixelNoteAnims();
 			antialiasing = false;
-
-			if(isSustainNote) {
+            if(isSustainNote) {
 				offsetX += lastNoteOffsetXForPixelAutoAdjusting;
 				lastNoteOffsetXForPixelAutoAdjusting = (width - 7) * (PlayState.daPixelZoom / 2);
 				offsetX -= lastNoteOffsetXForPixelAutoAdjusting;
 				
-				/*if(animName != null && !animName.endsWith('end'))
+				if(animName != null && !animName.endsWith('end'))
 				{
 					lastScaleY /= lastNoteScaleToo;
 					lastNoteScaleToo = (6 / height);
 					lastScaleY *= lastNoteScaleToo; 
-				}*/
+				}
 			}
+    
 		} else {
-			frames = Paths.getSparrowAtlas(blahblah);
+			frames = Paths.getSparrowAtlas(blahblah + coolswag);
 			loadNoteAnims();
 			antialiasing = ClientPrefs.globalAntialiasing;
 		}
 		if(isSustainNote) {
 			scale.y = lastScaleY;
+			if(ClientPrefs.keSustains) {
+				if(prevNote.deftype){
+                                scale.y *= 1;}
+                                else{
+                                 scale.y *= 0.75;}
+			}
 		}
 		updateHitbox();
 
@@ -365,11 +405,8 @@ class Note extends FlxSprite
 		{
 			canBeHit = false;
 
-			if (strumTime < Conductor.songPosition + (Conductor.safeZoneOffset * earlyHitMult))
-			{
-				if((isSustainNote && prevNote.wasGoodHit) || strumTime <= Conductor.songPosition)
-					wasGoodHit = true;
-			}
+			if (strumTime <= Conductor.songPosition)
+				wasGoodHit = true;
 		}
 
 		if (tooLate && !inEditor)
