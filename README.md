@@ -14,6 +14,7 @@ To install LuaJIT do this: `haxelib git linc_luajit https://github.com/AndreiRud
 * Shadow Mario - Psych Engine
 * Kade Dev - smTools
 * nebulazorua - modcharts
+* XaleTheCat - fnf grafex source
 
 ### Special Thanks
 * shubs - New Input System
