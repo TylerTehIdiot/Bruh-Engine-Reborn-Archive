@@ -17,10 +17,10 @@ import flixel.tweens.FlxTween;
 import lime.utils.Assets;
 import flixel.system.FlxSound;
 import openfl.utils.Assets as OpenFlAssets;
-import data.WeekData;
-import lime.app.Application;
+import WeekData;
+#if MODS_ALLOWED
 import sys.FileSystem;
-
+#end
 
 using StringTools;
 
@@ -52,8 +52,10 @@ class FreeplayState extends MusicBeatState
 
 	override function create()
 	{
-		Application.current.window.title = Main.appTitle + ' - FreePlay Menu';
+		Paths.clearStoredMemory();
+		Paths.clearUnusedMemory();
 		
+		persistentUpdate = true;
 		PlayState.isStoryMode = false;
 		WeekData.reloadWeekFiles(false);
 
@@ -99,6 +101,7 @@ class FreeplayState extends MusicBeatState
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.globalAntialiasing;
 		add(bg);
+		bg.screenCenter();
 
 		grpSongs = new FlxTypedGroup<Alphabet>();
 		add(grpSongs);
@@ -109,20 +112,19 @@ class FreeplayState extends MusicBeatState
 			songText.isMenuItem = true;
 			songText.targetY = i;
 			grpSongs.add(songText);
-			
+
 			if (songText.width > 980)
+			{
+				var textScale:Float = 980 / songText.width;
+				songText.scale.x = textScale;
+				for (letter in songText.lettersArray)
 				{
-					var textScale:Float = 980 / songText.width;
-					songText.scale.x = textScale;
-					for (letter in songText.lettersArray)
-					{
-						letter.x *= textScale;
-						letter.offset.x *= textScale;
-					}
-					//songText.updateHitbox();
-					//trace(songs[i].songName + ' new scale: ' + textScale);
+					letter.x *= textScale;
+					letter.offset.x *= textScale;
 				}
-	
+				//songText.updateHitbox();
+				//trace(songs[i].songName + ' new scale: ' + textScale);
+			}
 
 			Paths.currentModDirectory = songs[i].folder;
 			var icon:HealthIcon = new HealthIcon(songs[i].songCharacter);
@@ -203,6 +205,7 @@ class FreeplayState extends MusicBeatState
 
 	override function closeSubState() {
 		changeSelection(0, false);
+		persistentUpdate = true;
 		super.closeSubState();
 	}
 
@@ -229,15 +232,10 @@ class FreeplayState extends MusicBeatState
 
 	var instPlaying:Int = -1;
 	private static var vocals:FlxSound = null;
+	var holdTime:Float = 0;
 	override function update(elapsed:Float)
 	{
-		if (FlxG.sound.music != null)
-			Conductor.songPosition = FlxG.sound.music.time;
-		if(FlxG.keys.justPressed.F11)
-                {
-                FlxG.fullscreen = !FlxG.fullscreen;
-                }
-                if (FlxG.sound.music.volume < 0.7)
+		if (FlxG.sound.music.volume < 0.7)
 		{
 			FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
 		}
@@ -262,8 +260,6 @@ class FreeplayState extends MusicBeatState
 		scoreText.text = 'PERSONAL BEST: ' + lerpScore + ' (' + ratingSplit.join('.') + '%)';
 		positionHighscore();
 
-		FlxG.camera.zoom = FlxMath.lerp(1, FlxG.camera.zoom, CoolUtil.boundTo(1 - (elapsed * 3.125), 0, 1));
-
 		var upP = controls.UI_UP_P;
 		var downP = controls.UI_DOWN_P;
 		var accepted = controls.ACCEPT;
@@ -273,13 +269,31 @@ class FreeplayState extends MusicBeatState
 		var shiftMult:Int = 1;
 		if(FlxG.keys.pressed.SHIFT) shiftMult = 3;
 
-		if (upP)
+		if(songs.length > 1)
 		{
-			changeSelection(-shiftMult);
-		}
-		if (downP)
-		{
-			changeSelection(shiftMult);
+			if (upP)
+			{
+				changeSelection(-shiftMult);
+				holdTime = 0;
+			}
+			if (downP)
+			{
+				changeSelection(shiftMult);
+				holdTime = 0;
+			}
+
+			if(controls.UI_DOWN || controls.UI_UP)
+			{
+				var checkLastHold:Int = Math.floor((holdTime - 0.5) * 10);
+				holdTime += elapsed;
+				var checkNewHold:Int = Math.floor((holdTime - 0.5) * 10);
+
+				if(holdTime > 0.5 && checkNewHold - checkLastHold > 0)
+				{
+					changeSelection((checkNewHold - checkLastHold) * (controls.UI_UP ? -shiftMult : shiftMult));
+					changeDiff();
+				}
+			}
 		}
 
 		if (controls.UI_LEFT_P)
@@ -290,6 +304,7 @@ class FreeplayState extends MusicBeatState
 
 		if (controls.BACK)
 		{
+			persistentUpdate = false;
 			if(colorTween != null) {
 				colorTween.cancel();
 			}
@@ -299,6 +314,7 @@ class FreeplayState extends MusicBeatState
 
 		if(ctrl)
 		{
+			persistentUpdate = false;
 			openSubState(new GameplayChangersSubstate());
 		}
 		else if(space)
@@ -322,7 +338,6 @@ class FreeplayState extends MusicBeatState
 				vocals.persist = true;
 				vocals.looped = true;
 				vocals.volume = 0.7;
-				Conductor.changeBPM(PlayState.SONG.bpm);
 				instPlaying = curSelected;
 				#end
 			}
@@ -330,6 +345,7 @@ class FreeplayState extends MusicBeatState
 
 		else if (accepted)
 		{
+			persistentUpdate = false;
 			var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
 			var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
 			/*#if MODS_ALLOWED
@@ -363,19 +379,12 @@ class FreeplayState extends MusicBeatState
 			destroyFreeplayVocals();
 		}
 		else if(controls.RESET)
-        {
-                        persistentUpdate = false;
+		{
+			persistentUpdate = false;
 			openSubState(new ResetScoreSubState(songs[curSelected].songName, curDifficulty, songs[curSelected].songCharacter));
 			FlxG.sound.play(Paths.sound('scrollMenu'));
 		}
 		super.update(elapsed);
-	}
-
-	override function beatHit() {
-		super.beatHit();
-
-		if (FlxG.camera.zoom < 1.35 && ClientPrefs.camZooms && curBeat % 1 == 0)
-			FlxG.camera.zoom += 0.015;
 	}
 
 	public static function destroyFreeplayVocals() {
@@ -489,15 +498,15 @@ class FreeplayState extends MusicBeatState
 			}
 		}
 		
-		curDifficulty = Math.round(Math.max(0, CoolUtil.defaultDifficulties.indexOf(CoolUtil.defaultDifficulty)));
 		if(CoolUtil.difficulties.contains(CoolUtil.defaultDifficulty))
-			{
-				curDifficulty = Math.round(Math.max(0, CoolUtil.defaultDifficulties.indexOf(CoolUtil.defaultDifficulty)));
-			}
-			else
-			{
-				curDifficulty = 0;
-			}
+		{
+			curDifficulty = Math.round(Math.max(0, CoolUtil.defaultDifficulties.indexOf(CoolUtil.defaultDifficulty)));
+		}
+		else
+		{
+			curDifficulty = 0;
+		}
+
 		var newPos:Int = CoolUtil.difficulties.indexOf(lastDifficultyName);
 		//trace('Pos of ' + lastDifficultyName + ' is ' + newPos);
 		if(newPos > -1)

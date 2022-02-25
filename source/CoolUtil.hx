@@ -135,18 +135,4 @@ class CoolUtil
 		FlxG.openURL(site);
 		#end
 	}
-
-	public static function getArtist(song:String) 
-		{
-			var artistPrefix:String = '';
-			switch (song) // Write here your Composer(s)
-			{
-				case 'alteratrocity' | 'fluffy-revenge':
-                    artistPrefix = 'XaleTheCat';
-                default:
-				    artistPrefix = 'Kawai Sprite';
-			}	
-	
-			return artistPrefix;
-		}
 }

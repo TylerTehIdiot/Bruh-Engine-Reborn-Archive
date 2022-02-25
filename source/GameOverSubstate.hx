@@ -77,11 +77,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		super.update(elapsed);
 
-		if(FlxG.keys.justPressed.F11)
-                {
-                   FlxG.fullscreen = !FlxG.fullscreen;
-                }
-                PlayState.instance.callOnLuas('onUpdate', [elapsed]);
+		PlayState.instance.callOnLuas('onUpdate', [elapsed]);
 		if(updateCamera) {
 			var lerpVal:Float = CoolUtil.boundTo(elapsed * 0.6, 0, 1);
 			camFollowPos.setPosition(FlxMath.lerp(camFollowPos.x, camFollow.x, lerpVal), FlxMath.lerp(camFollowPos.y, camFollow.y, lerpVal));
@@ -142,10 +138,6 @@ class GameOverSubstate extends MusicBeatSubstate
 	function coolStartDeath(?volume:Float = 1):Void
 	{
 		FlxG.sound.playMusic(Paths.music(loopSoundName), volume);
-                if (PlayState.curStage == 'tankStage' || PlayState.curStage == 'tankStage2')
-			{
-			    FlxG.sound.play(Paths.sound('jeffGameover-' + FlxG.random.int(1, 25), 'week7'));
-			}
 	}
 
 	function endBullshit():Void
